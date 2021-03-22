@@ -11,9 +11,7 @@ def string_to_list(string):
     :param string:
     :return:
     """
-    splitted_list = []
-    splitted_list[:0] = string
-    return splitted_list
+    return [char for char in string]
 
 
 def char_list_to_ascii_list(char_list):
@@ -67,12 +65,24 @@ def split_binary_to_block(string):
     return list_block
 
 
+def format_missing_zeros(list_binary):
+    """
+
+    :param list_binary:
+    :return:
+    """
+    while len(list_binary[-1]) != 6:
+        list_binary[-1] += '0'
+    return list_binary
+
+
 if __name__ == '__main__':
-    original_string = "ABCDE"
+    original_string = input("Enter a string: ")
     splitted_list = string_to_list(original_string)
     ascii_list = char_list_to_ascii_list(splitted_list)
     binary_list = ascii_list_to_binary_list(ascii_list)
     string_binary = string_list_to_string(binary_list)
-    print(string_binary)
     list_block = split_binary_to_block(string_binary)
+    print(list_block)
+    list_block = format_missing_zeros(list_block)
     print(list_block)
