@@ -54,10 +54,10 @@ def split_binary_to_block(string):
     :return:
     """
     list_block = []
-    i = 1
+    i = 0
     block = ''
     for char in string:
-        if i % 6 == 0:
+        if i % 6 == 0 and i != 0:
             list_block.append(block)
             block = ''
         block += char
