@@ -76,6 +76,12 @@ def format_missing_zeros(list_binary):
     return list_binary
 
 
+def binary_list_to_decimal_list(binary_list):
+    for index, value in enumerate(binary_list):
+        binary_list[index] = int(value, 2)
+    return binary_list
+
+
 if __name__ == '__main__':
     original_string = input("Enter a string: ")
     splitted_list = string_to_list(original_string)
@@ -86,3 +92,5 @@ if __name__ == '__main__':
     print(list_block)
     list_block = format_missing_zeros(list_block)
     print(list_block)
+    decimal_list = binary_list_to_decimal_list(list_block)
+    print(decimal_list)
