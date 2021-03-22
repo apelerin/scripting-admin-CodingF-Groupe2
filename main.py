@@ -85,8 +85,9 @@ def binary_list_to_decimal_list(binary_list):
     for index, value in enumerate(binary_list):
         binary_list[index] = int(value, 2)
     return binary_list
-    
-def transformBase64(splitedList):
+
+
+def transform_base64(splitedList):
     """
     convert a list in BASE64
     :param splitedList: a list of splited decimals
@@ -95,18 +96,10 @@ def transformBase64(splitedList):
     chars = ""
     for i in range(len(splitedList)):
         chars = chars + chr(splitedList[i] + 65)
-    transformStringAgain(chars)
+    return chars
 
-def transformStringAgain(chars):
-    """
-    convert a list of chars into a string
-    :param chars: a list of chars
-    :return:
-    """
-    string = "".join(chars)
-    multipleOfFour(string)
 
-def multipleOfFour(string):
+def multiple_of_four(string):
     """
     check if a string has enough chars to be multipliable by 4 and adds '=' if it is not
     :param string: a string
@@ -114,7 +107,7 @@ def multipleOfFour(string):
     """
     while (len(string) %4 != 0):
         string = string + "="
-    print(string)
+    return string
 
 
 if __name__ == '__main__':
@@ -124,8 +117,8 @@ if __name__ == '__main__':
     binary_list = ascii_list_to_binary_list(ascii_list)
     string_binary = string_list_to_string(binary_list)
     list_block = split_binary_to_block(string_binary)
-    print(list_block)
     list_block = format_missing_zeros(list_block)
-    print(list_block)
     decimal_list = binary_list_to_decimal_list(list_block)
-    print(decimal_list)
+    b64 = transform_base64(decimal_list)
+    b64_string = string_list_to_string(b64)
+    print(multiple_of_four(b64_string))
