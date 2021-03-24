@@ -35,10 +35,15 @@ def test():
     try:
         point = influxdb_client.Point("sensors").field("Battery Level", battery_level.percent).tag("host_name",
                                                                                                    gma() + "")
-        write_api.write(bucket=BUCKET, org=ORG, record=point)
+        #write_api.write(bucket=BUCKET, org=ORG, record=point)
     except AttributeError:
         pass
-    point = influxdb_client.Point("cpu").field("CPU Percent", cpu_percent).tag("host_name", gma() + "")
+    point2 = influxdb_client.Point("cpu").field("CPU Percent", cpu_percent).tag("host_name", gma() + "")
+    #write_api.write("my-bucket", "my-org", [
+     #   {"measurement": "h2o_feet", "tags": {"location": "coyote_creek"}, "fields": {"water_level": 1}, "time": 1}])
+
+    write_api.write(BUCKET, ORG, [point, point2])
+
     write_api.write(bucket=BUCKET, org=ORG, record=point)
     time.sleep(1)
     test()
