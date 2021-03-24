@@ -10,16 +10,16 @@ load_dotenv()
 
 batteryLevel = psutil.sensors_battery()
 
-hostname = socket.gethostname() #nomDeLaMachine
-local_ip = socket.gethostbyname(hostname) #ipDeLaMachine
+hostname = socket.gethostname()  # nomDeLaMachine
+local_ip = socket.gethostbyname(hostname)  # ipDeLaMachine
 
 print(psutil.cpu_percent(interval=1))
 
-bucket = "etienne.buronfosse's Bucket"
-org = "etienne.buronfosse@edu.itescia.fr"
+bucket = os.getenv("BUCKET")
+org = os.getenv("ORG")
 TOKEN = os.getenv("INFLUXDB_TOKEN")
 # Store the URL of your InfluxDB instance
-URL=os.getenv("URL")
+URL = os.getenv("URL")
 
 client = influxdb_client.InfluxDBClient(
     url=URL,
@@ -29,16 +29,19 @@ client = influxdb_client.InfluxDBClient(
 
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
+
 def test():
     batteryLevel = psutil.sensors_battery()
     cpuPercent = psutil.cpu_percent(interval=1)
-    point = influxdb_client.Point("sensors").field("Battery Level", batteryLevel.percent).tag("host_name", local_ip + "")
+    point = influxdb_client.Point("sensors").field("Battery Level", batteryLevel.percent).tag("host_name",
+                                                                                              local_ip + "")
     write_api.write(bucket=bucket, org=org, record=point)
     point = influxdb_client.Point("cpu").field("CPU Percent", cpuPercent).tag("host_name", local_ip + "")
     write_api.write(bucket=bucket, org=org, record=point)
-    time.sleep(1) 
+    time.sleep(1)
     print(batteryLevel.percent)
     print(cpuPercent)
     test()
+
 
 test()
