@@ -11,7 +11,16 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 
 def send_data(func):
+    """Send data to influxdb
+
+    Args:
+        func : function that retrieve some points
+    Returns: the wrapper which writes points in influxdb
+    """
     def wrapper():
+        """The wrapper which makes the link to influx fb
+
+        """
         data = func()
         load_dotenv()
 
@@ -31,6 +40,9 @@ def send_data(func):
 
 
 def collect_data():
+    """Call each function with their respective range
+
+    """
     scheduler = BlockingScheduler(timezone='Europe/Paris')
     if sensors_battery() is not None:
         scheduler.add_job(get_battery_level, "interval", seconds=15)
@@ -42,6 +54,10 @@ def collect_data():
 
 @send_data
 def get_cpu_usage():
+    """Get CPU usage per second
+
+    Returns: point object from influxdb-client
+    """
     cpu_usage = cpu_percent(interval=1)
     return influxdb_client.Point("cpu").field("CPU Percent", cpu_usage).tag("host_name", gma() + "").time(
         time.time_ns())
@@ -49,6 +65,10 @@ def get_cpu_usage():
 
 @send_data
 def get_battery_level():
+    """Get battery level
+
+    Returns: point object from influxdb-client
+    """
     battery_level = sensors_battery()
     if battery_level is not None:
         return influxdb_client.Point("sensors").field("Battery Level", battery_level.percent).tag("host_name",
@@ -58,6 +78,10 @@ def get_battery_level():
 
 @send_data
 def swap_memory_used():
+    """Get swap memory used
+
+    Returns: point object from influxdb-client
+    """
     swap_used = swap_memory()
     return influxdb_client.Point("memory").tag("host_name", gma() + "").field("Swap memory used",
                                                                               swap_used.percent).time(time.time_ns())
@@ -65,6 +89,10 @@ def swap_memory_used():
 
 @send_data
 def get_disk_usage():
+    """Get disks information
+
+    Returns: list of points object from influxdb-client
+    """
     disks = disk_partitions()
     for disk in disks:
         space_disk_usage = disk_usage(disk.device)
