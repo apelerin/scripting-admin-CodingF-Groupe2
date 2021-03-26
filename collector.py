@@ -3,7 +3,9 @@ from datetime import datetime
 import influxdb_client
 import time
 from influxdb_client.client.write_api import SYNCHRONOUS
-from psutil import sensors_battery, cpu_percent, swap_memory, disk_usage, disk_partitions, virtual_memory
+from psutil import (
+    sensors_battery, cpu_percent, swap_memory, disk_usage, disk_partitions, virtual_memory, net_io_counters
+)
 from getmac import get_mac_address as gma
 from os import getenv
 from dotenv import load_dotenv
@@ -50,6 +52,7 @@ def collect_data():
     scheduler.add_job(get_swap_memory_used, "interval", seconds=10)
     scheduler.add_job(get_disk_usage, "interval", seconds=60)
     scheduler.add_job(get_virtual_memory, "interval", seconds=5)
+    scheduler.add_job(get_network_data, "interval", seconds=10)
     scheduler.start()
 
 
@@ -113,4 +116,17 @@ def get_virtual_memory():
         .field("total_virtual_memory", memory.total)\
         .field("virtual_memory_used", memory.used)\
         .field("virtual_memory_free", memory.free)\
+        .tag("host_name", gma() + "")
+
+
+@send_data
+def get_network_data():
+    """Get network information since system starts
+
+    Returns: point object from influxdb-client
+    """
+    network_data = net_io_counters()
+    return influxdb_client.Point("network")\
+        .field("uploading", network_data.bytes_sent)\
+        .field("downloading", network_data.bytes_recv)\
         .tag("host_name", gma() + "")
