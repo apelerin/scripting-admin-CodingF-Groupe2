@@ -3,7 +3,7 @@ from datetime import datetime
 import influxdb_client
 import time
 from influxdb_client.client.write_api import SYNCHRONOUS
-from psutil import sensors_battery, cpu_percent, swap_memory, disk_usage, disk_partitions
+from psutil import sensors_battery, cpu_percent, swap_memory, disk_usage, disk_partitions, virtual_memory
 from getmac import get_mac_address as gma
 from os import getenv
 from dotenv import load_dotenv
@@ -47,8 +47,9 @@ def collect_data():
     if sensors_battery() is not None:
         scheduler.add_job(get_battery_level, "interval", seconds=15)
     scheduler.add_job(get_cpu_usage, "interval", seconds=2)
-    scheduler.add_job(swap_memory_used, "interval", seconds=10)
-    scheduler.add_job(get_disk_usage, "interval", seconds=20)
+    scheduler.add_job(get_swap_memory_used, "interval", seconds=10)
+    scheduler.add_job(get_disk_usage, "interval", seconds=60)
+    scheduler.add_job(get_virtual_memory, "interval", seconds=5)
     scheduler.start()
 
 
@@ -59,8 +60,7 @@ def get_cpu_usage():
     Returns: point object from influxdb-client
     """
     cpu_usage = cpu_percent(interval=1)
-    return influxdb_client.Point("cpu").field("CPU Percent", cpu_usage).tag("host_name", gma() + "").time(
-        time.time_ns())
+    return influxdb_client.Point("cpu").field("CPU Percent", cpu_usage).tag("host_name", gma() + "")
 
 
 @send_data
@@ -71,20 +71,17 @@ def get_battery_level():
     """
     battery_level = sensors_battery()
     if battery_level is not None:
-        return influxdb_client.Point("sensors").field("Battery Level", battery_level.percent).tag("host_name",
-                                                                                                   gma() + "").time(
-            time.time_ns())
+        return influxdb_client.Point("sensors").field("Battery Level", battery_level.percent).tag("host_name", gma() + "")
 
 
 @send_data
-def swap_memory_used():
+def get_swap_memory_used():
     """Get swap memory used
 
     Returns: point object from influxdb-client
     """
     swap_used = swap_memory()
-    return influxdb_client.Point("memory").tag("host_name", gma() + "").field("Swap memory used",
-                                                                              swap_used.percent).time(time.time_ns())
+    return influxdb_client.Point("memory").field("Swap memory used", swap_used.percent).tag("host_name", gma() + "")
 
 
 @send_data
@@ -96,5 +93,24 @@ def get_disk_usage():
     disks = disk_partitions()
     for disk in disks:
         space_disk_usage = disk_usage(disk.device)
-        yield influxdb_client.Point("disks").field("total", space_disk_usage.total).field("used", space_disk_usage.used)\
-            .field("free", space_disk_usage.free).field("percent", space_disk_usage.percent).tag("host_name", gma() + "").tag("disk_name", disk.device)
+        yield influxdb_client.Point("disks")\
+            .field("total", space_disk_usage.total)\
+            .field("used", space_disk_usage.used)\
+            .field("free", space_disk_usage.free)\
+            .field("percent", space_disk_usage.percent)\
+            .tag("host_name", gma() + "")\
+            .tag("disk_name", disk.device)
+
+
+@send_data
+def get_virtual_memory():
+    """Get virtual memory information
+
+    Returns: point object from influxdb-client
+    """
+    memory = virtual_memory()
+    return influxdb_client.Point("memory")\
+        .field("total_virtual_memory", memory.total)\
+        .field("virtual_memory_used", memory.used)\
+        .field("virtual_memory_free", memory.free)\
+        .tag("host_name", gma() + "")
